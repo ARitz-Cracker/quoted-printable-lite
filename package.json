@@ -1,0 +1,25 @@
+{
+	"author": {
+		"name": "Aritz Beobide-Cardinal",
+		"email": "aritz@aritzcracker.ca"
+	},
+	"bugs": {
+		"url": "https://github.com/ARitz-Cracker/quoted-printable-lite/issues"
+	},
+	"dependencies": {},
+	"description": "Lightweight, zero-dependency Quoted-Printable transfer encoding as defined by RFC 2045",
+	"devDependencies": {},
+	"homepage": "https://github.com/ARitz-Cracker/quoted-printable-lite",
+	"license": "GPL3",
+	"main": "index.js",
+	"name": "quoted-printable-lite",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ARitz-Cracker/quoted-printable-lite.git"
+	},
+	"scripts": {},
+	"version": "0.1.0",
+	"browserRequirifier":{
+		"include":[]
+	}
+  }
