@@ -27,13 +27,21 @@ const encodeEscapedText = function(buff, crlf, index, lineSize, maxLineLength, c
 	}
 	return [index, lineSize];
 }
-
-const encode = function(buff = new Uint8Array(0), crlf = true, binary = false, maxLineLength = 76){
+const alwaysEscapedBody = {
+	61: true // "="
+}
+const alwaysEscapedHeader = {
+	61: true, // "="
+	63: true, // "?"
+	95: true // "_"
+}
+const encode = function(buff = new Uint8Array(0), crlf = true, binary = false, maxLineLength = 76, alternate = false){
 	maxLineLength -= 1;
 	if(buff.length === 0){
 		// This might end up breaking something, but at that point you probably deserve to suffer
 		return buff;
 	}
+	const alwaysEscaped = alternate ? alwaysEscapedHeader : alwaysEscapedBody;
 	let resultSize = 0;
 	let resultIndex = 0;
 	let currentlineSize = 0;
@@ -52,7 +60,7 @@ const encode = function(buff = new Uint8Array(0), crlf = true, binary = false, m
 			// not crlf, strip out all \r
 			resultSize += crlf ? 2 : 1;
 			currentlineSize = 0;
-		}else if(c >= 32 && c <= 126 && c !== 61) {
+		}else if(c >= 32 && c <= 126 && !alwaysEscaped[c]) {
 			resultSize += 1;
 			currentlineSize += 1;
 			if(currentlineSize == maxLineLength){
@@ -74,7 +82,7 @@ const encode = function(buff = new Uint8Array(0), crlf = true, binary = false, m
 	
 	if(!binary && c === 10){ //\n
 		resultSize += crlf ? 2 : 1;
-	}else if(c >= 33 && c <= 126 && c !== 61) {
+	}else if(c >= 33 && c <= 126 && !alwaysEscaped[c]) {
 		// Last character cannot be a space (note the 33 instead of a 32)
 		resultSize += 1;
 	}else{
@@ -100,8 +108,12 @@ const encode = function(buff = new Uint8Array(0), crlf = true, binary = false, m
 			}
 			resultBuffer[resultIndex++] = 10; //"\n"
 			currentlineSize = 0;
-		}else if(c >= 32 && c <= 126 && c !== 61) {
-			resultBuffer[resultIndex++] = c;
+		}else if(c >= 32 && c <= 126 && !alwaysEscaped[c]) {
+			if(c === 32 && alternate){
+				resultBuffer[resultIndex++] = 95; // "_"
+			}else{
+				resultBuffer[resultIndex++] = c;
+			}
 			currentlineSize += 1;
 			if(currentlineSize == maxLineLength){
 				resultBuffer[resultIndex++] = 61; // "="
@@ -120,7 +132,7 @@ const encode = function(buff = new Uint8Array(0), crlf = true, binary = false, m
 			resultBuffer[resultIndex++] = 13; //"\r"
 		}
 		resultBuffer[resultIndex++] = 10; //"\n"
-	}else if(c >= 33 && c <= 126 && c !== 61) {
+	}else if(c >= 33 && c <= 126 && !alwaysEscaped[c]) {
 		// Last character cannot be a space (note the 33 instead of a 32)
 		resultBuffer[resultIndex++] = c;
 	}else{
@@ -153,7 +165,7 @@ const jumpFowardIfSoftLineBreak = function(buff, i){
 	}
 	return 0;
 }
-const decode = function(buff = new Uint8Array(0), crlf = true, inPlace = false){
+const decode = function(buff = new Uint8Array(0), crlf = true, inPlace = false, alternate = false){
 	if(!inPlace){
 		buff = typeof Buffer === "undefined" ? new Uint8Array(buff) : Buffer.from(buff);
 	}
@@ -183,6 +195,10 @@ const decode = function(buff = new Uint8Array(0), crlf = true, inPlace = false){
 				buff[resultIndex++] = encodedValue;
 				i += 2;
 			}
+			continue;
+		}
+		if(c === 95 && alternate){
+			buff[resultIndex++] = 32;
 			continue;
 		}
 		buff[resultIndex++] = c;

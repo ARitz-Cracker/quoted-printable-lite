@@ -18,7 +18,7 @@
 		"url": "git+https://github.com/ARitz-Cracker/quoted-printable-lite.git"
 	},
 	"scripts": {},
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"browserRequirifier":{
 		"include":[]
 	}
